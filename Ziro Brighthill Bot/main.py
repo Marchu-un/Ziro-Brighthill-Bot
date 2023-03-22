@@ -27,7 +27,7 @@ Brighthill_initial_prompt = """Я - гейммастер для ДнД игры 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     # Get chat_id from message object
-    chat_id = message.from_user.id
+    chat_id = message.chat.id
     
     # Get or create context for chat_id
     if chat_id not in context_dict:
@@ -69,7 +69,9 @@ def name_or_reply(message):
     name_match = re.search(name_pattern, message.text)
     
     # check if the message is a reply to the bot using message.reply_to_message.from_user.is_bot
-    reply_match = message.reply_to_message.from_user.is_bot
+    if message.reply_to_message is not None:
+        reply_match = message.reply_to_message.from_user.is_bot
+    else: reply_match = False
     
     # return True if either name_match or reply_match is True, otherwise return False
     return bool(name_match) or bool(reply_match)
@@ -77,10 +79,11 @@ def name_or_reply(message):
 @bot.message_handler(func=name_or_reply)
 def handle_message(message):
     # Get chat_id from message object
-    chat_id = message.from_user.id
+    chat_id = message.chat.id
+    user_id = message.from_user.id
     
     # Append message text to context 
-    context_dict[chat_id] += f"User: {message.text}"
+    context_dict[chat_id] += f"{user_id}: {message.text}"
     
     # Get or create counter for chat_id 
     if chat_id not in counter_dict:
@@ -98,7 +101,7 @@ def handle_message(message):
     context_dict[chat_id] += f"{response}"
     
     # Add counter to response text 
-    response += f"\nMessage #{counter_dict[chat_id]} | /reset"
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | /reset"
     
      # Send response back to user 
     bot.send_message(chat_id=chat_id , text=response)
