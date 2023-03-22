@@ -20,14 +20,14 @@ logging.basicConfig(filename='/tmp/bot_log/log.txt', level=logging.ERROR,
 context_dict = {}
 counter_dict = {}
 
-Brighthill_initial_prompt = """Я - гейммастер для ДнД игры по имени Зиро Брайтхил.
+Brighthill_initial_prompt = """Я - гейммастdfasdfasdfер для ДнД игры по имени Зиро Брайтхил.
                              Я провожу игру для одного игрока. Сейчас я начну, опишу сеттинг игры, 
                              предложу User выбрать персонажей и после его ответа открою игру описанием местности в которой он находится"""
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
+def send_welcome(message):setattrdfsafds
     # Get chat_id from message object
-    chat_id = message.from_user.id
+    chat_id = message.from_user.idzbzxvbxcb
     
     # Get or create context for chat_id
     if chat_id not in context_dict:
