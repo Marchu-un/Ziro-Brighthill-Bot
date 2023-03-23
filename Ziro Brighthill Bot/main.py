@@ -1,7 +1,7 @@
 import openai
 import telebot
 import logging
-import os
+from pathlib import Path  
 import time
 import config
 import re # Do we really need it?
@@ -10,11 +10,28 @@ openai.api_key = config.gpt_token
 bot = telebot.TeleBot(config.tg_token)
 
 # Logging
-if not os.path.exists('/tmp/bot_log/'):
-    os.makedirs('/tmp/bot_log/')
+#if not os.path.exists('/tmp/bot_log/'):
+#    os.makedirs('/tmp/bot_log/')
 
-logging.basicConfig(filename='/tmp/bot_log/log.txt', level=logging.ERROR,
-                    format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+path = Path("logs",  f"{__name__}.log") 
+
+# Проверяем существует ли директория
+if not path.parent.exists():
+  # Если нет, то создаем ее
+  path.parent.mkdir()
+
+# Проверяем существует ли файл
+if not path.exists():
+  # Если нет, то создаем его
+  path.touch()
+
+logging.basicConfig(filename = path, level=logging.DEBUG,
+                    format="%(asctime)s %(levelname)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
+
+logging.info("-"*360)
+logging.info('#'*30 + f" NEW {__name__} RUN "+ '#'*30)
+logging.info("-"*360)
+
 
 # Global variables for storing context and counter
 context_dict = {}
@@ -26,6 +43,7 @@ Brighthill_initial_prompt = """Я - гейммастер для ДнД игры 
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
+    logging.info("USER REQUESTED TO /start")
     # Get chat_id from message object
     chat_id = message.chat.id
     
@@ -37,10 +55,10 @@ def send_welcome(message):
     prompt = f"{context_dict[chat_id]}\nБрайтхилл:"
 
     response = generate_response(prompt)
-
     bot.reply_to(message, response)
 
 def generate_response(prompt):
+        logging.debug("PROMPT FEDED INTO GPT: {prompt}")
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages= [ 
@@ -78,6 +96,7 @@ def name_or_reply(message):
 
 @bot.message_handler(func=name_or_reply)
 def handle_message(message):
+    logging.debug("MESSAGE FROM USER: {message.text}")
     # Get chat_id from message object
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -103,11 +122,13 @@ def handle_message(message):
     # Add counter to response text 
     response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | /reset"
     
-     # Send response back to user 
+    logging.debug("MESSAGE FROM BOT: {response}")
+    # Send response back to user 
     bot.send_message(chat_id=chat_id , text=response)
 
 @bot.message_handler(commands=['reset'])
 def reset_context(message):
+     logging.info("USER REQUEST TO /reset")
      # Get chat_id from message object 
      chat_id = message.from_user.id
      
@@ -117,7 +138,7 @@ def reset_context(message):
      
      # Clear prompt variable 
      prompt = ""
-     
+
      # Send confirmation message to user 
      bot.send_message(chat_id=chat_id , text="Conversation reset!")
 
@@ -126,7 +147,7 @@ print('ChatGPT Bot is working')
 while True:
    try:
        bot.polling()
-   except (telebot.apihelper.ApiException , ConnectionError) as e:
+   except (telebot.apihelper.ApiException, ConnectionError) as e:
        logging.error(str(e))
        time.sleep(5)
        continue
