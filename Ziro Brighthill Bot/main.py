@@ -58,7 +58,7 @@ def send_welcome(message):
     bot.reply_to(message, response)
 
 def generate_response(prompt):
-        logging.debug("PROMPT FEDED INTO GPT: {prompt}")
+        logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages= [ 
@@ -96,7 +96,7 @@ def name_or_reply(message):
 
 @bot.message_handler(func=name_or_reply)
 def handle_message(message):
-    logging.debug("MESSAGE FROM USER: {message.text}")
+    logging.debug(f"MESSAGE FROM USER: {message.text}")
     # Get chat_id from message object
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -122,7 +122,7 @@ def handle_message(message):
     # Add counter to response text 
     response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | /reset"
     
-    logging.debug("MESSAGE FROM BOT: {response}")
+    logging.debug(f"MESSAGE FROM BOT: {response}")
     # Send response back to user 
     bot.send_message(chat_id=chat_id , text=response)
 
