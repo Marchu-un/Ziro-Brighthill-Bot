@@ -1,5 +1,5 @@
 Ziro-Brighthill-Bot
-is a DnD gammemaster telegram bot
+is a gammemaster telegram bot
 
 main - mysorka
 
