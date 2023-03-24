@@ -124,10 +124,10 @@ def handle_message(message):
     response = generate_response(prompt)
     
     # Append response text to context 
-    context_dict[chat_id] += f"{response}"
+    context_dict[chat_id] += f"Брайтхилл: {response}"
     
     # Add counter to response text 
-    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id} /reset"
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id}"
     
     logging.debug(f"MESSAGE FROM BOT: {response}")
 
