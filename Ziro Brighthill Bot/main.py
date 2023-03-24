@@ -4,6 +4,7 @@ import logging
 from pathlib import Path  
 import time
 import config
+from telebot import types
 import re # Do we really need it?
 
 openai.api_key = config.gpt_token
@@ -38,8 +39,22 @@ context_dict = {}
 counter_dict = {}
 
 Brighthill_initial_prompt = """Я - гейммастер для ДнД игры. Моё имя Зиро Брайтхил.
-                             Я провожу игру для одного игрока. Я не описываю варианты игрока, позволяю ему самому решать. Сейчас я начну, опишу сеттинг игры, 
-                             предложу игроку описать своего персонажа, дождусь его ответа открою игру описанием местности в которой он находится"""
+                             Я провожу игру для одного игрока. Я не описываю варианты игрока, позволяю ему самому решать. Сейчас я опишу сеттинг игры, 
+                             и после того как получу от игрока описание его персонажа, открою игру описанием местности в которой он находится"""
+
+def generate_response(prompt):
+        logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages= [ 
+            {"role": "user", "content": prompt} 
+            ],
+            temperature=0.5,
+            top_p=1.0,
+            frequency_penalty=0.5,
+            presence_penalty=0.0
+        )
+        return response['choices'][0]['message']['content']
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -56,20 +71,6 @@ def send_welcome(message):
 
     response = generate_response(prompt)
     bot.reply_to(message, response)
-
-def generate_response(prompt):
-        logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages= [ 
-            {"role": "user", "content": prompt} 
-            ],
-            temperature=0.5,
-            top_p=1.0,
-            frequency_penalty=0.5,
-            presence_penalty=0.0
-        )
-        return response['choices'][0]['message']['content']
 
 # No context bot response
 @bot.message_handler(commands=['bot'])
@@ -92,6 +93,8 @@ def name_or_reply(message):
     else: reply_match = False
     
     # return True if either name_match or reply_match is True, otherwise return False
+    if message.from_user.id == message.chat.id:
+        return True
     return bool(name_match) or bool(reply_match)
 
 @bot.message_handler(func=name_or_reply)
@@ -127,6 +130,7 @@ def handle_message(message):
     response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id} /reset"
     
     logging.debug(f"MESSAGE FROM BOT: {response}")
+
     # Send response back to user 
     bot.send_message(chat_id=chat_id , text=response)
 
