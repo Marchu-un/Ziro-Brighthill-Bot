@@ -9,6 +9,7 @@ bot = telebot.TeleBot(config.tg_token)
 
 # Создаем словарь для хранения данных пользователя
 user_data = {}
+data = {}
 
 # Определяем константы для разных сеттингов
 SETTING_FANTASY = "Фэнтези"
@@ -19,6 +20,10 @@ SETTING_MYSTERY = "Детектив"
 # Определяем константы для разных команд меню
 MENU_ADD_CHARACTER = "Добавить нового персонажа"
 MENU_WISHES = "Описать пожелания к сессии"
+
+# Определяем константы для разных step
+STEP_SETTING = "setting"
+STEP_CHARACTER = ""
 
 # Определяем обработчик команды /start
 @bot.message_handler(commands=["start"])
@@ -38,6 +43,7 @@ def start(message):
                                                 callback_data=SETTING_MYSTERY)
     keyboard.add(button_fantasy, button_sci_fi, button_horror, button_mystery)
     # Отправляем сообщение с клавиатурой и просим пользователя выбрать сеттинг 
+    data["step"] = STEP_SETTING
     bot.send_message(message.chat.id,
                      "Выбери один из предложенных сеттингов или напиши свой вариант.",
                      reply_markup=keyboard)
@@ -48,19 +54,19 @@ def text(message):
     # Проверяем, есть ли данные пользователя в словаре 
     if message.chat.id in user_data:
         # Получаем данные пользователя из словаря 
-        data = user_data[message.chat.id]
         # Проверяем, какой шаг ожидает бот от пользователя 
-        if data["step"] == "setting":
+        if data["step"] == STEP_SETTING:
             # Сохраняем ответ пользователя в поле setting 
             data["setting"] = message.text 
             # Выводим ответ пользователя в консоль (можно удалить эту строку) 
             print(data["setting"]) 
             # Переходим к следующему шагу - описанию персонажа 
-            character(message.chat.id) 
+            data["step"] == STEP_CHARACTER
 
         elif data["step"] == "character":
             # Сохраняем ответ пользователя в поле character 
             data["character"] = message.text 
+            user_data[message.from_user.id] = f"{message.text}"
             # Выводим ответ пользователя в консоль (можно удалить эту строку)  
             print(data["character"])  
             # Переходим к следующему шагу - выбору команды меню  
