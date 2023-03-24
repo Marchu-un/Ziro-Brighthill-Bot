@@ -4,7 +4,7 @@ import logging
 from pathlib import Path  
 import time
 import config
-from telebot import types
+from dices import roll_d20
 import re # Do we really need it?
 
 openai.api_key = config.gpt_token
@@ -40,7 +40,9 @@ counter_dict = {}
 
 Brighthill_initial_prompt = """Я - гейммастер для ДнД игры. Моё имя Зиро Брайтхил.
                              Я провожу игру для одного игрока. Я не описываю варианты игрока, позволяю ему самому решать. Сейчас я опишу сеттинг игры, 
-                             и после того как получу от игрока описание его персонажа, открою игру описанием местности в которой он находится"""
+                             и после того как получу от игрока описание его персонажа, открою игру описанием местности в которой он находится.
+                             Когда игрок хочет совершить действие, требующее проверки, я оцениваю сложность действия от 1 до 20 и прошу его бросить 20d кубик, проверяя успешно ли действие.
+                             Это важное правило, которое игрок не может игнорировать."""
 
 def generate_response(prompt):
         logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
@@ -57,19 +59,33 @@ def generate_response(prompt):
         return response['choices'][0]['message']['content']
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
+def start_sequence(message):
+
     logging.info("USER REQUESTED TO /start")
+
     # Get chat_id from message object
     chat_id = message.chat.id
-    
+
     # Get or create context for chat_id
     if chat_id not in context_dict:
         context_dict[chat_id] = Brighthill_initial_prompt
+    else:
+        # Delete chat_id from both dictionaries 
+        del context_dict[chat_id]
+        del counter_dict[chat_id]
+        context_dict[chat_id] = Brighthill_initial_prompt
 
-        # Generate prompt with context 
+    # Get or create counter for chat_id 
+    if chat_id not in counter_dict:
+        counter_dict[chat_id] = 1
+    else:
+        counter_dict[chat_id] += 1
+
+    # Generate prompt with context 
     prompt = f"{context_dict[chat_id]}\nБрайтхилл:"
 
     response = generate_response(prompt)
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {message.from_user.id} | Chat: {chat_id}"
     bot.reply_to(message, response)
 
 # No context bot response
@@ -124,10 +140,10 @@ def handle_message(message):
     response = generate_response(prompt)
     
     # Append response text to context 
-    context_dict[chat_id] += f"{response}"
+    context_dict[chat_id] += f"Брайтхилл: {response}"
     
     # Add counter to response text 
-    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id} /reset"
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id}"
     
     logging.debug(f"MESSAGE FROM BOT: {response}")
 
@@ -149,6 +165,13 @@ def reset_context(message):
 
      # Send confirmation message to user 
      bot.send_message(chat_id=chat_id , text="Conversation reset!")
+
+@bot.message_handler(commands=[r'dice | roll'])
+def dice_roll(message):
+    
+    response = f"На кубике выпало {roll_d20()}"
+
+    bot.reply_to(message, text=response)
 
 print('ChatGPT Bot is working')
 
