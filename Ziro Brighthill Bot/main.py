@@ -16,14 +16,14 @@ bot = telebot.TeleBot(config.tg_token)
 
 path = Path("logs",  f"{__name__}.log") 
 
-# Проверяем существует ли директория
+# Checking if directory exist
 if not path.parent.exists():
-  # Если нет, то создаем ее
+  # If does not, creating one
   path.parent.mkdir()
 
-# Проверяем существует ли файл
+# Cheking if file exist
 if not path.exists():
-  # Если нет, то создаем его
+  # If does not, creating one
   path.touch()
 
 logging.basicConfig(filename = path, level=logging.DEBUG, encoding = "UTF-8",
