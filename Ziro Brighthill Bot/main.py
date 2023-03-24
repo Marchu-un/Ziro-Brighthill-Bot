@@ -80,7 +80,7 @@ def command_message(message):
     bot.reply_to(message, text=response)
 
 # define a regular expression pattern that matches any of the names
-name_pattern = r'(Брайтхил|Брайтхилл|брайхилл|брайтхил|Зиро|зиро)'
+name_pattern = r'(Брайтхил|Брайтхилл|брайтхилл|брайтхил|Зиро|зиро)'
 
 # define a function that checks if a message matches the condition
 def name_or_reply(message):
