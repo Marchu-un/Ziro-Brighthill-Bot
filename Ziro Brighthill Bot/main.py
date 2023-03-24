@@ -124,7 +124,7 @@ def handle_message(message):
     context_dict[chat_id] += f"{response}"
     
     # Add counter to response text 
-    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | /reset"
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {user_id} | Chat: {chat_id} /reset"
     
     logging.debug(f"MESSAGE FROM BOT: {response}")
     # Send response back to user 
