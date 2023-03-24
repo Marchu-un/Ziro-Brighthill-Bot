@@ -100,6 +100,10 @@ def handle_message(message):
     # Get chat_id from message object
     chat_id = message.chat.id
     user_id = message.from_user.id
+
+    if chat_id not in context_dict:
+        bot.send_message(chat_id=chat_id , text="Начните с команды /start")
+        return
     
     # Append message text to context 
     context_dict[chat_id] += f"{user_id}: {message.text}"
