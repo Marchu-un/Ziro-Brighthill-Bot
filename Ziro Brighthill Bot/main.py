@@ -25,7 +25,7 @@ if not path.exists():
   # Если нет, то создаем его
   path.touch()
 
-logging.basicConfig(filename = path, level=logging.DEBUG,
+logging.basicConfig(filename = path, level=logging.DEBUG, encoding = "UTF-8",
                     format="%(asctime)s %(levelname)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
 
 logging.info("-"*360)
