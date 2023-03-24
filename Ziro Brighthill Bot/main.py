@@ -57,19 +57,33 @@ def generate_response(prompt):
         return response['choices'][0]['message']['content']
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
+def start_sequence(message):
+
     logging.info("USER REQUESTED TO /start")
+
     # Get chat_id from message object
     chat_id = message.chat.id
-    
+
     # Get or create context for chat_id
     if chat_id not in context_dict:
         context_dict[chat_id] = Brighthill_initial_prompt
+    else:
+        # Delete chat_id from both dictionaries 
+        del context_dict[chat_id]
+        del counter_dict[chat_id]
+        context_dict[chat_id] = Brighthill_initial_prompt
 
-        # Generate prompt with context 
+    # Get or create counter for chat_id 
+    if chat_id not in counter_dict:
+        counter_dict[chat_id] = 1
+    else:
+        counter_dict[chat_id] += 1
+
+    # Generate prompt with context 
     prompt = f"{context_dict[chat_id]}\nБрайтхилл:"
 
     response = generate_response(prompt)
+    response += f"\nMessage #{counter_dict[chat_id]}| User: {message.from_user.id} | Chat: {chat_id}"
     bot.reply_to(message, response)
 
 # No context bot response
