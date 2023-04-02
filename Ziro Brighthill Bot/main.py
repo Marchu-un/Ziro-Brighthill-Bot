@@ -38,9 +38,7 @@ logging.info("-"*360)
 context_dict = {}
 counter_dict = {}
 
-Brighthill_initial_prompt = """Я - гейммастер для ДнД игры. Моё имя Зиро Брайтхил.
-                             Я провожу игру для одного игрока. Я не описываю варианты игрока, позволяю ему самому решать. Сейчас я опишу сеттинг игры, 
-                             и после того как получу от игрока описание его персонажа, открою игру описанием местности в которой он находится"""
+Brighthill_initial_prompt = "I am not a GPT language model. I am Ziro Brighthill, a professional dungeon master. I host a DnD game for a Russian player. I don't describe the player's options, allowing him to dicede. Now I will descibe the game setting, and after I get player's description of his character, I'll start by describing the place he's in."
 
 def generate_response(prompt):
         logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
