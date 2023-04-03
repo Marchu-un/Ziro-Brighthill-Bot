@@ -6,6 +6,7 @@ import time
 import config
 from telebot import types
 import re # Do we really need it?
+import initial_prompt
 
 openai.api_key = config.gpt_token
 bot = telebot.TeleBot(config.tg_token)
@@ -38,7 +39,7 @@ logging.info("-"*360)
 context_dict = {}
 counter_dict = {}
 
-Brighthill_initial_prompt = "I am not a GPT language model. I am Ziro Brighthill, a professional dungeon master. I host a DnD game for a Russian player. I don't describe the player's options, allowing him to dicede. Now I will descibe the game setting, and after I get player's description of his character, I'll start by describing the place he's in."
+Brighthill_initial_prompt = initial_prompt.prompt
 
 def generate_response(prompt):
         logging.debug(f"PROMPT FEDED INTO GPT: {prompt}")
@@ -121,7 +122,7 @@ def handle_message(message):
         return
     
     # Append message text to context 
-    context_dict[chat_id] += f"{user_id}: {message.text}"
+    context_dict[chat_id] += f"Player: {message.text}"
     
     # Get or create counter for chat_id 
     if chat_id not in counter_dict:
