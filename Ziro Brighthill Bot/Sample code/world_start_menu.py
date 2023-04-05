@@ -6,85 +6,64 @@ from telebot import types
 
 # Создаем объект бота с помощью токена, полученного от @BotFather
 bot = telebot.TeleBot(config.tg_token)
-
-# Создаем словарь для хранения данных пользователя
 user_data = {}
-data = {}
 
-# Определяем константы для разных сеттингов
-SETTING_FANTASY = "Фэнтези"
-SETTING_SCI_FI = "Научная фантастика"
-SETTING_HORROR = "Ужасы"
-SETTING_MYSTERY = "Детектив"
 
-# Определяем константы для разных команд меню
-MENU_ADD_CHARACTER = "Добавить нового персонажа"
-MENU_WISHES = "Описать пожелания к сессии"
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    chat_id = message.chat.id
+    user_data[chat_id] = {}
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(types.KeyboardButton('Фэнтези'), types.KeyboardButton('Средневековье'), types.KeyboardButton("Вестерн"))
+    bot.reply_to(message, "Ты выбрал сеттинг:", reply_markup=markup)
 
-# Определяем константы для разных step
-STEP_SETTING = "setting"
-STEP_CHARACTER = ""
 
-# Определяем обработчик команды /start
-@bot.message_handler(commands=["start"])
-def start(message):
-    # Отправляем приветственное сообщение пользователю
-    bot.send_message(message.chat.id, "Привет! Давай создадим игровой мир вместе.")
-    # Создаем объект InlineKeyboardMarkup для отображения кнопок с выбором сеттинга
-    keyboard = types.InlineKeyboardMarkup()
-    # Создаем объекты InlineKeyboardButton для каждого сеттинга и добавляем их к клавиатуре
-    button_fantasy = types.InlineKeyboardButton(text=SETTING_FANTASY,
-                                                callback_data=SETTING_FANTASY)
-    button_sci_fi = types.InlineKeyboardButton(text=SETTING_SCI_FI,
-                                               callback_data=SETTING_SCI_FI)
-    button_horror = types.InlineKeyboardButton(text=SETTING_HORROR,
-                                               callback_data=SETTING_HORROR)
-    button_mystery = types.InlineKeyboardButton(text=SETTING_MYSTERY,
-                                                callback_data=SETTING_MYSTERY)
-    keyboard.add(button_fantasy, button_sci_fi, button_horror, button_mystery)
-    # Отправляем сообщение с клавиатурой и просим пользователя выбрать сеттинг 
-    data["step"] = STEP_SETTING
-    bot.send_message(message.chat.id,
-                     "Выбери один из предложенных сеттингов или напиши свой вариант.",
-                     reply_markup=keyboard)
-
-# Определяем обработчик всех текстовых сообщений 
-@bot.message_handler(content_types=["text"])
-def text(message):
-    # Проверяем, есть ли данные пользователя в словаре 
-    if message.chat.id in user_data:
-        # Получаем данные пользователя из словаря 
-        # Проверяем, какой шаг ожидает бот от пользователя 
-        if data["step"] == STEP_SETTING:
-            # Сохраняем ответ пользователя в поле setting 
-            data["setting"] = message.text 
-            # Выводим ответ пользователя в консоль (можно удалить эту строку) 
-            print(data["setting"]) 
-            # Переходим к следующему шагу - описанию персонажа 
-            data["step"] == STEP_CHARACTER
-
-        elif data["step"] == "character":
-            # Сохраняем ответ пользователя в поле character 
-            data["character"] = message.text 
-            user_data[message.from_user.id] = f"{message.text}"
-            # Выводим ответ пользователя в консоль (можно удалить эту строку)  
-            print(data["character"])  
-            # Переходим к следующему шагу - выбору команды меню  
-            menu(message.chat.id) 
-
-        elif data["step"] == "wishes":
-             # Сохраняем ответ пользователя в поле wishes   
-             data["wishes"] = message.text   
-             # Выводим ответ пользователя в консоль (можно удалить эту строку)   
-             print(data["wishes"])   
-             # Отправляем сообщение пользователю с подтверждением получения всех данных   
-             bot.send_message(message.chat.id,
-                              f"Спасибо! Я записал все твои пожелания: \nСеттинг: {data['setting']}\nПерсонаж: {data['character']}\nПожелания к сессии: {data['wishes']}") 
-             # Сбрасываем данные пользователя из словаря  
-             user_data.pop(message.chat.id) 
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    chat_id = message.chat.id
+    if 'settings' not in user_data[chat_id]:
+        user_data[chat_id]['settings'] = message.text
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.row(types.KeyboardButton('Орк'), types.KeyboardButton('Гном'), types.KeyboardButton('Эльф'))
+        bot.reply_to(message, "Ты выбрал персонажа:", reply_markup=markup)
+    elif 'character' not in user_data[chat_id]:
+        user_data[chat_id]['character'] = message.text
+        msg = bot.reply_to(message, "Опиши своего персонажа:")
+        bot.register_next_step_handler(msg, process_character_description)
     else:
-        # Если пользователь не ввел команду /start или не ответил на вопросы, то игнорируем его сообщение  
-        pass
+        process_expectations(message)
 
-# Запускаем бота 
+
+def process_character_description(message):
+    chat_id = message.chat.id
+    user_data[chat_id]['character_description'] = message.text
+    bot.send_message(chat_id, "Хорошо, теперь опиши пожелания к игровой сессии:", reply_markup=None)
+    bot.register_next_step_handler(message, process_wishes)
+
+
+def process_wishes(message):
+    chat_id = message.chat.id
+    user_data[chat_id]['wishes'] = message.text
+    msg = bot.reply_to(message, "Теперь опиши какой бы ты хотел экспириенс получить по мере игрового процесса:")
+    bot.register_next_step_handler(msg, process_expectations)
+
+
+def process_expectations(message):
+    chat_id = message.chat.id
+    user_data[chat_id]['expectations'] = message.text
+    send_results(message.chat.id)
+
+
+def send_results(user_id):
+    chat_id = user_id
+    result = f'Сеттинг: {user_data[chat_id]["settings"]}' \
+             f'\nПерсонажи: {user_data[chat_id]["character"]}' \
+             f'\nОписание персонажа: {user_data[chat_id]["character_description"]}' \
+             f'\nПожелания к игровой сессии: {user_data[chat_id]["wishes"]}' \
+             f'\nПользовательский экспириенс: {user_data[chat_id]["expectations"]}'
+    markup = types.ReplyKeyboardRemove(selective=False)
+    bot.send_message(chat_id, result, reply_markup=markup)
+
+
+# Запускаем бота
 bot.polling()
